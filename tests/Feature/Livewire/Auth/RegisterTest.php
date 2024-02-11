@@ -13,12 +13,12 @@ it('renders successfully', function () {
 
 it('should be able to register a new user in the system', function() {
     Livewire::test(Register::class)
-    ->set('name', 'Joe Doe')
-    ->set('email', 'joedoe@gmail.com')
-    ->set('email_confirmation', 'joedoe@gmail.com')
-    ->set('password', 'password')
-    ->call('submit')
-    ->assertHasNoErrors();
+        ->set('name', 'Joe Doe')
+        ->set('email', 'joedoe@gmail.com')
+        ->set('email_confirmation', 'joedoe@gmail.com')
+        ->set('password', 'password')
+        ->call('submit')
+        ->assertHasNoErrors();
 
     assertDatabaseHas('users', [
         'name' => 'Joe Doe',
@@ -27,3 +27,18 @@ it('should be able to register a new user in the system', function() {
 
     assertDatabaseCount('users', 1);
 });
+
+test('required fields', function($f) {
+    Livewire::test(Register::class)
+        ->set($f->field, $f->value)
+        ->call('submit')
+        ->assertHasErrors([$f->field => $f->rule]);
+})->with([
+    'name::required' => (object) ['field' => 'name', 'value' => '', 'rule' => 'required'],
+    'name::max:255' => (object) ['field' => 'name', 'value' => str_repeat('*', 256), 'rule' => 'max'],
+    'email::required' => (object) ['field' => 'email', 'value' => '', 'rule' => 'required'],
+    'email::email' => (object) ['field' => 'email', 'value' => 'not-an-email', 'rule' => 'email'],
+    'email::max:255' => (object) ['field' => 'email', 'value' => str_repeat('*@doe.com', 256), 'rule' => 'max'],
+    'email::confirmed' => (object) ['field' => 'email', 'value' => str_repeat('*@doe.com', 256), 'rule' => 'confirmed'],
+    'password::required' => (object) ['field' => 'password', 'value' => '', 'rule' => 'required']
+]);
